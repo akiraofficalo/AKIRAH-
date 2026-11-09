@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AKIRAH — Alternative Fashion</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#101010;color:#eee;font-family:Arial,sans-serif}
+header{padding:22px 7%;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #333}
+.logo{font-size:30px;font-weight:900;letter-spacing:7px}
+nav a{color:white;text-decoration:none;margin-left:20px;font-size:13px}
+.hero{min-height:440px;display:flex;flex-direction:column;justify-content:center;padding:70px 9%;background:linear-gradient(90deg,#080808,#252020)}
+.hero p{color:#aaa;letter-spacing:4px}
+.hero h1{font-size:clamp(48px,10vw,100px);letter-spacing:8px;margin:20px 0}
+.hero button,.buy,.checkout{background:#eee;color:#111;border:0;padding:14px 25px;cursor:pointer;font-weight:bold}
+section{padding:65px 7%}
+h2{font-size:30px;letter-spacing:4px;margin-bottom:30px}
+.products{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:25px}
+.product{background:#1b1b1b;padding:12px}
+.product img{width:100%;height:270px;object-fit:cover;background:#292929}
+.product h3{margin:15px 0 8px}
+.product p{color:#aaa;margin-bottom:15px}
+button{cursor:pointer}
+.cart{background:#1a1a1a;padding:25px;line-height:2}
+.cart button{padding:5px 12px}
+input, textarea{background:#222;color:white;border:1px solid #555;padding:12px;width:100%;margin:8px 0}
+footer{text-align:center;padding:35px;color:#777;border-top:1px solid #333}
+.small{color:#999;font-size:12px;margin-top:15px}
+.cart-item-row{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #333;padding:8px 0}
+</style>
+</head>
+<body>
+
+<header>
+<div class="logo">AKIRAH</div>
+<nav>
+<a href="#home">HOME</a>
+<a href="#shop">SHOP</a>
+<a href="#cart">CART (<span id="count">0</span>)</a>
+</nav>
+</header>
+
+<div class="hero" id="home">
+<p>NOT MADE TO FIT IN.</p>
+<h1>AKIRAH.</h1>
+<p>Alternative fashion. Individual identity.</p>
+<br>
+<a href="#shop"><button>EXPLORE COLLECTION</button></a>
+</div>
+
+<section id="shop">
+<h2>THE COLLECTION</h2>
+<div class="products" id="products"></div>
+</section>
+
+<section id="cart">
+<h2>YOUR CART</h2>
+<div class="cart">
+<div id="cartItems">Your cart is empty.</div>
+<h3>Total: <span id="total">0</span> MAD</h3>
+<br>
+<button class="checkout" onclick="checkout()">CONTINUE TO CHECKOUT</button>
+<p class="small">Cash on delivery (COD) available across Morocco.</p>
+</div>
+</section>
+
+<section id="checkout">
+<h2>CHECKOUT</h2>
+<form id="orderForm" onsubmit="submitOrder(event)">
+<label>Full Name</label>
+<input type="text" id="name" required placeholder="Enter your full name">
+
+<label>Phone Number</label>
+<input type="tel" id="phone" required placeholder="06XXXXXXXX">
+
+<label>Delivery Address & City</label>
+<textarea id="address" required placeholder="Street, Neighborhood, City"></textarea>
+
+<br><br>
+<button type="submit" class="checkout">CONFIRM ORDER (COD)</button>
+</form>
+</section>
+
+<footer>
+<h2>AKIRAH.</h2>
+<p>Express yourself. Break the rules.</p>
+<p class="small">© 2026 AKIRAH — All rights reserved.</p>
+</footer>
+
+<script>
+const products=[
+{name:"Dark Oversized Tee",price:180,img:"https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600"},
+{name:"Alternative Hoodie",price:320,img:"https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=600"},
+{name:"Grunge Streetwear",price:250,img:"https://images.unsplash.com/photo-1523398002811-999ca8dec234?w=600"},
+{name:"Black Essential",price:200,img:"https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=600"}
+];
+
+let cart=[];
+
+function displayProducts(){
+document.getElementById("products").innerHTML=products.map((p,i)=>`
+<div class="product">
+<img src="${p.img}" alt="${p.name}">
+<h3>${p.name}</h3>
+<p>${p.price} MAD</p>
+<button class="buy" onclick="add(${i})">ADD TO CART</button>
+</div>`).join("");
+}
+
+function add(i){
+const product = products[i];
+const existingIndex = cart.findIndex(item => item.name === product.name);
+if(existingIndex > -1){
+cart[existingIndex].quantity += 1;
+} else {
+cart.push({...product, quantity: 1});
+}
+updateCart();
+}
+
+function updateCart(){
+const totalCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+document.getElementById("count").textContent = totalCount;
+
+document.getElementById("cartItems").innerHTML = cart.length ?
+cart.map((p,i)=>`
+<div class="cart-item-row">
+<span>${p.name} (x${p.quantity}) — ${p.price * p.quantity} MAD</span>
+<button onclick="removeItem(${i})">REMOVE</button>
+</div>
+`).join("") : "Your cart is empty.";
+
+const totalPrice = cart.reduce((sum,p)=>sum + (p.price * p.quantity), 0);
+document.getElementById("total").textContent = totalPrice;
+}
+
+function removeItem(i){
+cart.splice(i,1);
+updateCart();
+}
+
+function checkout(){
+if(!cart.length){
+alert("Your cart is empty!");
+return;
+}
+document.getElementById("checkout").scrollIntoView({behavior:"smooth"});
+}
+
+function submitOrder(e){
+e.preventDefault();
+const name = document.getElementById("name").value;
+const phone = document.getElementById("phone").value;
+alert("Thank you " + name + "! Your order has been placed successfully via Cash on Delivery. We will contact you at " + phone + " very soon.");
+cart = [];
+updateCart();
+document.getElementById("orderForm").reset();
+window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+displayProducts();
+</script>
+</body>
+</html>
