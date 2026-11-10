@@ -24,7 +24,7 @@
         <button onclick="checkPassword()">دخول</button>
     </div>
 
-    <!-- لوحة التحكم اللي ماكتفتاش إلا بالكود -->
+    <!-- لوحة التحكم -->
     <div id="admin-panel" class="panel hidden">
         <h2>إدارة المنتجات</h2>
         
@@ -41,12 +41,13 @@
     </div>
 
     <script>
-        // حط الكود السري اللي بغيتي هنا (مثلا: akirah2026)
+        // الكود السري ديالك
         const MY_SECRET_CODE = "akirah2026";
 
-        // معلومات Supabase ديالك
-        const SUPABASE_URL = 'حط_هنا_Project_URL_ديالك';
-        const SUPABASE_ANON_KEY = 'حط_هنا_Anon_Key_ديالك';
+        // معلومات Supabase المربوطة بموقعك
+        const SUPABASE_URL = 'https://mcgojcrqthtowagnffdk.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_zyq8Nm5IHnjl7u9mHReORw_0suR_B07';
+        
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         function checkPassword() {
@@ -125,3 +126,4 @@
 
 </body>
 </html>
+
