@@ -34,7 +34,7 @@ footer{text-align:center;padding:35px;color:#777;border-top:1px solid #333}
 <body>
 
 <header>
-<div class="logo">AKIRAH</div>
+<div class="logo">AKIRAH 🪽</div>
 <nav>
 <a href="#home">HOME</a>
 <a href="#shop">SHOP</a>
@@ -44,7 +44,7 @@ footer{text-align:center;padding:35px;color:#777;border-top:1px solid #333}
 
 <div class="hero" id="home">
 <p>NOT MADE TO FIT IN.</p>
-<h1>AKIRAH.</h1>
+<h1>AKIRAH 🪽</h1>
 <p>Alternative fashion. Individual identity.</p>
 <br>
 <a href="#shop"><button>EXPLORE COLLECTION</button></a>
@@ -84,7 +84,7 @@ footer{text-align:center;padding:35px;color:#777;border-top:1px solid #333}
 </section>
 
 <footer>
-<h2>AKIRAH.</h2>
+<h2>AKIRAH 🪽</h2>
 <p>Express yourself. Break the rules.</p>
 <p class="small">© 2026 AKIRAH — All rights reserved.</p>
 </footer>
@@ -100,7 +100,7 @@ let cart = [];
 async function fetchProducts() {
     const { data, error } = await supabaseClient.from('products').select('*');
     if(error || !data || data.length === 0){
-        document.getElementById("products").innerHTML = "<p>ما كاينا حتى سلعة حالياً في المتجر.</p>";
+        document.getElementById("products").innerHTML = "<p>ما كاينا حتى سلعة حالياً في المتجر. زبر شي سلعة من لوحة التحكم.</p>";
         return;
     }
     products = data;
