@@ -2,104 +2,165 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>متجر AKIRAH</title>
-    <!-- مكتبة Supabase -->
+    <title>لوحة التحكم - AKIRAH Admin</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: Tahoma, sans-serif; background: #f4f4f4; padding: 20px; text-align: right; }
-        .container { background: white; padding: 20px; border-radius: 8px; max-width: 600px; margin: auto; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .admin-box, .panel { background: white; padding: 20px; border-radius: 8px; max-width: 700px; margin: auto; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .hidden { display: none; }
         input, button { padding: 10px; margin: 5px 0; width: 100%; box-sizing: border-box; }
         button { background: #000; color: #fff; border: none; cursor: pointer; border-radius: 4px; }
         button:hover { background: #333; }
-        .product-card { border: 1px solid #ddd; padding: 15px; margin-bottom: 10px; border-radius: 6px; background: #fafafa; }
+        .item-row, .order-row { border-bottom: 1px solid #ddd; padding: 12px 0; margin-bottom: 10px; }
+        .order-row { background: #fafafa; padding: 15px; border-radius: 6px; border: 1px solid #eee; }
+        .delete-btn { background: red; width: auto; padding: 5px 10px; margin-top: 5px; }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h2>🛍️ منتجات المتجر</h2>
-        <div id="products-list">جاري تحميل المنتجات...</div>
+    <!-- مرحلة إدخال الكود السري -->
+    <div id="login-screen" class="admin-box">
+        <h2>دخول المسؤول (Admin)</h2>
+        <input type="password" id="admin-pass" placeholder="أدخل الكود السري الخاص بك">
+        <button onclick="checkPassword()">دخول</button>
     </div>
 
-    <!-- نافذة إتمام الطلب -->
-    <div class="container" id="checkout-section">
-        <h2>📦 تأكيد الطلبية</h2>
-        <input type="text" id="c-name" placeholder="الاسم الكامل">
-        <input type="text" id="c-phone" placeholder="رقم الهاتف">
-        <input type="text" id="c-address" placeholder="العنوان ورقم المدينة">
+    <!-- لوحة التحكم -->
+    <div id="admin-panel" class="hidden">
         
-        <input type="hidden" id="selected-product-name" value="منتج عام">
-        <input type="hidden" id="selected-product-price" value="0">
-        
-        <p>السلعة المختارة: <strong id="display-product">اختر سلعة من الفوق</strong></p>
-        
-        <button onclick="submitOrder()">تأكيد الشراء الآن</button>
+        <!-- قسم الطلبيات -->
+        <div class="panel">
+            <h2>📦 الطلبيات الواردة (Orders)</h2>
+            <div id="admin-orders-list">جاري تحميل الطلبيات...</div>
+        </div>
+
+        <!-- قسم إدارة المنتجات -->
+        <div class="panel">
+            <h2>🛒 إدارة المنتجات</h2>
+            <h3>إضافة منتج جديد</h3>
+            <input type="text" id="p-name" placeholder="اسم السلعة (مثلاً: T-Shirt)">
+            <input type="text" id="p-desc" placeholder="وصف قصير">
+            <input type="number" id="p-price" placeholder="الثمن بالدرهم">
+            <button onclick="addProduct()">إضافة السلعة للموقع</button>
+
+            <hr style="margin: 20px 0;">
+
+            <h3>السلع الحالية</h3>
+            <div id="admin-products-list">جاري التحميل...</div>
+        </div>
+
     </div>
 
     <script>
+        const MY_SECRET_CODE = "akirah2026";
         const SUPABASE_URL = 'https://mcgojcrqthtowagnffdk.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_zyq8Nm5IHnjl7u9mHReORw_0suR_B07';
+        
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // جلب المنتجات وعرضها للزبون
-        async function loadPublicProducts() {
-            const { data } = await supabaseClient.from('products').select('*');
-            const listContainer = document.getElementById('products-list');
-            listContainer.innerHTML = '';
+        function checkPassword() {
+            const enteredPass = document.getElementById('admin-pass').value;
+            if (enteredPass === MY_SECRET_CODE) {
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('admin-panel').classList.remove('hidden');
+                loadAdminProducts();
+                loadAdminOrders();
+            } else {
+                alert('الكود خطأ!');
+            }
+        }
+
+        // جلب وعرض الطلبيات
+        async function loadAdminOrders() {
+            const { data, error } = await supabaseClient.from('orders').select('*').order('id', { ascending: false });
+            const ordersContainer = document.getElementById('admin-orders-list');
+            ordersContainer.innerHTML = '';
             
-            if (!data || data.length === 0) {
-                listContainer.innerHTML = 'ما كاينا حتى سلعة متوفرة حالياً.';
+            if (error || !data || data.length === 0) {
+                ordersContainer.innerHTML = 'ما كاينا حتى طلبيّة حالياً.';
                 return;
             }
 
-            data.forEach(p => {
-                listContainer.innerHTML += `
-                    <div class="product-card">
-                        <h3>${p.name}</h3>
-                        <p>${p.description || ''}</p>
-                        <p style="color:green; font-weight:bold;">${p.price} درهم</p>
-                        <button onclick="selectProduct('${p.name}', ${p.price})">اختر هذه السلعة للطلب</button>
+            data.forEach(o => {
+                ordersContainer.innerHTML += `
+                    <div class="order-row">
+                        <p><strong>👤 الاسم:</strong> ${o.customer_name || 'غير محدد'}</p>
+                        <p><strong>📞 الهاتف:</strong> ${o.customer_phone || 'غير محدد'}</p>
+                        <p><strong>📍 العنوان:</strong> ${o.customer_address || 'غير محدد'}</p>
+                        <p><strong>🛍️ السلعة:</strong> ${o.product_name || 'منتج'} (<span style="color:green;">${o.total_price || 0} درهم</span>)</p>
+                        <button class="delete-btn" onclick="deleteOrder(${o.id})">حذف الطلبية</button>
                     </div>
                 `;
             });
         }
 
-        // اختيار سلعة للطلب
-        function selectProduct(name, price) {
-            document.getElementById('selected-product-name').value = name;
-            document.getElementById('selected-product-price').value = price;
-            document.getElementById('display-product').innerText = `${name} (${price} درهم)`;
-            alert(`تم اختيار: ${name}`);
+        async function deleteOrder(id) {
+            if (confirm('واش متأكد بغيتي تمسح هاد الطلبية؟')) {
+                const { error } = await supabaseClient.from('orders').delete().eq('id', id);
+                if (!error) {
+                    loadAdminOrders();
+                } else {
+                    alert('خطأ في الحذف.');
+                }
+            }
         }
 
-        // إرسال الطلبية لـ Supabase
-        async function submitOrder() {
-            const customer_name = document.getElementById('c-name').value;
-            const customer_phone = document.getElementById('c-phone').value;
-            const customer_address = document.getElementById('c-address').value;
-            const product_name = document.getElementById('selected-product-name').value;
-            const total_price = parseFloat(document.getElementById('selected-product-price').value);
-
-            if (!customer_name || !customer_phone || !customer_address) {
-                alert('عمر معلوماتك كاملة (الاسم، الهاتف، والعنوان)!');
+        // جلب وعرض المنتجات
+        async function loadAdminProducts() {
+            const { data } = await supabaseClient.from('products').select('*');
+            const listContainer = document.getElementById('admin-products-list');
+            listContainer.innerHTML = '';
+            
+            if (!data || data.length === 0) {
+                listContainer.innerHTML = 'ما كاينا حتى سلعة.';
                 return;
             }
 
-            const { error } = await supabaseClient.from('orders').insert([
-                { customer_name, customer_phone, customer_address, product_name, total_price }
-            ]);
+            data.forEach(p => {
+                listContainer.innerHTML += `
+                    <div class="item-row" style="display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <strong>${p.name}</strong> - <span style="color:green;">${p.price} درهم</span>
+                        </div>
+                        <button class="delete-btn" onclick="deleteProduct(${p.id})">حذف</button>
+                    </div>
+                `;
+            });
+        }
+
+        async function addProduct() {
+            const name = document.getElementById('p-name').value;
+            const description = document.getElementById('p-desc').value;
+            const price = parseFloat(document.getElementById('p-price').value);
+
+            if (!name || !price) {
+                alert('عمر اسم السلعة والثمن على الأقل!');
+                return;
+            }
+
+            const { error } = await supabaseClient.from('products').insert([{ name, description, price }]);
 
             if (!error) {
-                alert('تمت طلبيتك بنجاح! شكرا لك.');
-                document.getElementById('c-name').value = '';
-                document.getElementById('c-phone').value = '';
-                document.getElementById('c-address').value = '';
+                alert('تمت إضافة السلعة بنجاح!');
+                document.getElementById('p-name').value = '';
+                document.getElementById('p-desc').value = '';
+                document.getElementById('p-price').value = '';
+                loadAdminProducts();
             } else {
-                alert('حدث خطأ أثناء إرسال الطلبية، عاود المحاولة.');
+                alert('حدث خطأ أثناء الإضافة.');
             }
         }
 
-        loadPublicProducts();
+        async function deleteProduct(id) {
+            if (confirm('واش متأكد بغيتي تمسح هاد السلعة؟')) {
+                const { error } = await supabaseClient.from('products').delete().eq('id', id);
+                if (!error) {
+                    loadAdminProducts();
+                } else {
+                    alert('خطأ في الحذف.');
+                }
+            }
+        }
     </script>
 
 </body>
