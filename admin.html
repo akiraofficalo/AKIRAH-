@@ -2,26 +2,26 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>لوحة التحكم - AKIRAH Admin</title>
+    <title>لوحة التحكم - AKIRAH Admin 🪽</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: Tahoma, sans-serif; background: #f4f4f4; padding: 20px; text-align: right; }
-        .admin-box, .panel { background: white; padding: 20px; border-radius: 8px; max-width: 700px; margin: auto; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        body { font-family: Tahoma, sans-serif; background: #101010; color: #eee; padding: 20px; text-align: right; }
+        .admin-box, .panel { background: #1b1b1b; padding: 20px; border-radius: 8px; max-width: 700px; margin: auto; box-shadow: 0 4px 10px rgba(0,0,0,0.3); margin-bottom: 20px; border: 1px solid #333; }
         .hidden { display: none; }
-        input, button { padding: 10px; margin: 5px 0; width: 100%; box-sizing: border-box; }
-        button { background: #000; color: #fff; border: none; cursor: pointer; border-radius: 4px; }
-        button:hover { background: #333; }
-        .item-row, .order-row { border-bottom: 1px solid #ddd; padding: 12px 0; margin-bottom: 10px; }
-        .order-row { background: #fafafa; padding: 15px; border-radius: 6px; border: 1px solid #eee; }
-        .delete-btn { background: red; width: auto; padding: 5px 10px; margin-top: 5px; }
-        .admin-img-preview { width: 50px; height: 50px; object-fit: cover; vertical-align: middle; margin-left: 10px; }
+        input, button { padding: 12px; margin: 8px 0; width: 100%; box-sizing: border-box; background: #222; color: white; border: 1px solid #555; }
+        button { background: #eee; color: #111; border: none; cursor: pointer; font-weight: bold; }
+        button:hover { background: #ccc; }
+        .item-row, .order-row { border-bottom: 1px solid #333; padding: 12px 0; margin-bottom: 10px; }
+        .order-row { background: #161616; padding: 15px; border-radius: 6px; border: 1px solid #333; }
+        .delete-btn { background: #ff4444; color: white; width: auto; padding: 6px 12px; margin-top: 5px; }
+        .admin-img-preview { width: 50px; height: 50px; object-fit: cover; vertical-align: middle; margin-left: 10px; background: #292929; }
     </style>
 </head>
 <body>
 
     <!-- مرحلة إدخال الكود السري -->
     <div id="login-screen" class="admin-box">
-        <h2>دخول المسؤول (Admin)</h2>
+        <h2>دخول المسؤول (Admin) 🪽</h2>
         <input type="password" id="admin-pass" placeholder="أدخل الكود السري الخاص بك">
         <button onclick="checkPassword()">دخول</button>
     </div>
@@ -44,7 +44,7 @@
             <input type="text" id="p-img" placeholder="رابط التصويرة (Image URL)">
             <button onclick="addProduct()">إضافة السلعة للموقع</button>
 
-            <hr style="margin: 20px 0;">
+            <hr style="margin: 20px 0; border-color: #333;">
 
             <h3>السلع الحالية في الموقع</h3>
             <div id="admin-products-list">جاري التحميل...</div>
@@ -87,7 +87,7 @@
                         <p><strong>👤 الاسم:</strong> ${o.customer_name || 'غير محدد'}</p>
                         <p><strong>📞 الهاتف:</strong> ${o.customer_phone || 'غير محدد'}</p>
                         <p><strong>📍 العنوان:</strong> ${o.customer_address || 'غير محدد'}</p>
-                        <p><strong>🛍️ السلعة:</strong> ${o.product_name || 'منتج'} (<span style="color:green;">${o.total_price || 0} درهم</span>)</p>
+                        <p><strong>🛍️ السلعة:</strong> ${o.product_name || 'منتج'} (<span style="color:#4ecc50;">${o.total_price || 0} MAD</span>)</p>
                         <button class="delete-btn" onclick="deleteOrder(${o.id})">حذف الطلبية</button>
                     </div>
                 `;
@@ -120,7 +120,7 @@
                     <div class="item-row" style="display:flex; justify-content:space-between; align-items:center;">
                         <div>
                             <img src="${p.img || ''}" class="admin-img-preview" alt="">
-                            <strong>${p.name}</strong> - <span style="color:green;">${p.price} درهم</span>
+                            <strong>${p.name}</strong> - <span style="color:#4ecc50;">${p.price} MAD</span>
                         </div>
                         <button class="delete-btn" onclick="deleteProduct(${p.id})">حذف</button>
                     </div>
