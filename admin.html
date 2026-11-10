@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>لوحة التحكم - AKIRAH Admin</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: Tahoma, sans-serif; background: #f4f4f4; padding: 20px; text-align: right; }
+        .admin-box, .panel { background: white; padding: 20px; border-radius: 8px; max-width: 600px; margin: auto; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .hidden { display: none; }
+        input, button { padding: 10px; margin: 5px 0; width: 100%; box-sizing: border-box; }
+        button { background: #000; color: #fff; border: none; cursor: pointer; border-radius: 4px; }
+        button:hover { background: #333; }
+        .product-row { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ddd; padding: 10px 0; }
+        .delete-btn { background: red; width: auto; padding: 5px 10px; }
+    </style>
+</head>
+<body>
+
+    <!-- مرحلة إدخال الكود السري -->
+    <div id="login-screen" class="admin-box">
+        <h2>دخول المسؤول (Admin)</h2>
+        <input type="password" id="admin-pass" placeholder="أدخل الكود السري الخاص بك">
+        <button onclick="checkPassword()">دخول</button>
+    </div>
+
+    <!-- لوحة التحكم اللي ماكتفتاش إلا بالكود -->
+    <div id="admin-panel" class="panel hidden">
+        <h2>إدارة المنتجات</h2>
+        
+        <h3>إضافة منتج جديد</h3>
+        <input type="text" id="p-name" placeholder="اسم السلعة (مثلاً: T-Shirt)">
+        <input type="text" id="p-desc" placeholder="وصف قصير">
+        <input type="number" id="p-price" placeholder="الثمن بالدرهم">
+        <button onclick="addProduct()">إضافة السلعة للموقع</button>
+
+        <hr style="margin: 20px 0;">
+
+        <h3>السلع الحالية</h3>
+        <div id="admin-products-list">جاري التحميل...</div>
+    </div>
+
+    <script>
+        // حط الكود السري اللي بغيتي هنا (مثلا: akirah2026)
+        const MY_SECRET_CODE = "akirah2026";
+
+        // معلومات Supabase ديالك
+        const SUPABASE_URL = 'حط_هنا_Project_URL_ديالك';
+        const SUPABASE_ANON_KEY = 'حط_هنا_Anon_Key_ديالك';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        function checkPassword() {
+            const enteredPass = document.getElementById('admin-pass').value;
+            if (enteredPass === MY_SECRET_CODE) {
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('admin-panel').classList.remove('hidden');
+                loadAdminProducts();
+            } else {
+                alert('الكود خطأ!');
+            }
+        }
+
+        async function loadAdminProducts() {
+            const { data } = await supabaseClient.from('products').select('*');
+            const listContainer = document.getElementById('admin-products-list');
+            listContainer.innerHTML = '';
+            
+            if (!data || data.length === 0) {
+                listContainer.innerHTML = 'ما كاينا حتى سلعة.';
+                return;
+            }
+
+            data.forEach(p => {
+                listContainer.innerHTML += `
+                    <div class="product-row">
+                        <div>
+                            <strong>${p.name}</strong> - <span style="color:green;">${p.price} درهم</span>
+                        </div>
+                        <button class="delete-btn" onclick="deleteProduct(${p.id})">حذف</button>
+                    </div>
+                `;
+            });
+        }
+
+        async function addProduct() {
+            const name = document.getElementById('p-name').value;
+            const description = document.getElementById('p-desc').value;
+            const price = parseFloat(document.getElementById('p-price').value);
+
+            if (!name || !price) {
+                alert('عمر اسم السلعة والثمن على الأقل!');
+                return;
+            }
+
+            const { error } = await supabaseClient
+                .from('products')
+                .insert([{ name, description, price }]);
+
+            if (!error) {
+                alert('تمت إضافة السلعة بنجاح!');
+                document.getElementById('p-name').value = '';
+                document.getElementById('p-desc').value = '';
+                document.getElementById('p-price').value = '';
+                loadAdminProducts();
+            } else {
+                alert('حدث خطأ أثناء الإضافة.');
+            }
+        }
+
+        async function deleteProduct(id) {
+            if (confirm('واش متأكد بغيتي تمسح هاد السلعة؟')) {
+                const { error } = await supabaseClient
+                    .from('products')
+                    .delete()
+                    .eq('id', id);
+
+                if (!error) {
+                    loadAdminProducts();
+                } else {
+                    alert('خطأ في الحذف.');
+                }
+            }
+        }
+    </script>
+
+</body>
+</html>
