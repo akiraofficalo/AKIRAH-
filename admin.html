@@ -14,6 +14,7 @@
         .item-row, .order-row { border-bottom: 1px solid #ddd; padding: 12px 0; margin-bottom: 10px; }
         .order-row { background: #fafafa; padding: 15px; border-radius: 6px; border: 1px solid #eee; }
         .delete-btn { background: red; width: auto; padding: 5px 10px; margin-top: 5px; }
+        .admin-img-preview { width: 50px; height: 50px; object-fit: cover; vertical-align: middle; margin-left: 10px; }
     </style>
 </head>
 <body>
@@ -34,18 +35,18 @@
             <div id="admin-orders-list">جاري تحميل الطلبيات...</div>
         </div>
 
-        <!-- قسم إدارة المنتجات -->
+        <!-- قسم إدارة المنتجات وتصاورهم -->
         <div class="panel">
-            <h2>🛒 إدارة المنتجات</h2>
-            <h3>إضافة منتج جديد</h3>
-            <input type="text" id="p-name" placeholder="اسم السلعة (مثلاً: T-Shirt)">
-            <input type="text" id="p-desc" placeholder="وصف قصير">
+            <h2>🛒 إدارة المنتجات والتصاور</h2>
+            <h3>إضافة منتج جديد مع التصويرة</h3>
+            <input type="text" id="p-name" placeholder="اسم السلعة (مثلاً: Dark Tee)">
             <input type="number" id="p-price" placeholder="الثمن بالدرهم">
+            <input type="text" id="p-img" placeholder="رابط التصويرة (Image URL)">
             <button onclick="addProduct()">إضافة السلعة للموقع</button>
 
             <hr style="margin: 20px 0;">
 
-            <h3>السلع الحالية</h3>
+            <h3>السلع الحالية في الموقع</h3>
             <div id="admin-products-list">جاري التحميل...</div>
         </div>
 
@@ -70,7 +71,6 @@
             }
         }
 
-        // جلب وعرض الطلبيات
         async function loadAdminOrders() {
             const { data, error } = await supabaseClient.from('orders').select('*').order('id', { ascending: false });
             const ordersContainer = document.getElementById('admin-orders-list');
@@ -105,14 +105,13 @@
             }
         }
 
-        // جلب وعرض المنتجات
         async function loadAdminProducts() {
             const { data } = await supabaseClient.from('products').select('*');
             const listContainer = document.getElementById('admin-products-list');
             listContainer.innerHTML = '';
             
             if (!data || data.length === 0) {
-                listContainer.innerHTML = 'ما كاينا حتى سلعة.';
+                listContainer.innerHTML = 'ما كاينا حتى سلعة حالياً.';
                 return;
             }
 
@@ -120,6 +119,7 @@
                 listContainer.innerHTML += `
                     <div class="item-row" style="display:flex; justify-content:space-between; align-items:center;">
                         <div>
+                            <img src="${p.img || ''}" class="admin-img-preview" alt="">
                             <strong>${p.name}</strong> - <span style="color:green;">${p.price} درهم</span>
                         </div>
                         <button class="delete-btn" onclick="deleteProduct(${p.id})">حذف</button>
@@ -130,21 +130,21 @@
 
         async function addProduct() {
             const name = document.getElementById('p-name').value;
-            const description = document.getElementById('p-desc').value;
             const price = parseFloat(document.getElementById('p-price').value);
+            const img = document.getElementById('p-img').value;
 
             if (!name || !price) {
                 alert('عمر اسم السلعة والثمن على الأقل!');
                 return;
             }
 
-            const { error } = await supabaseClient.from('products').insert([{ name, description, price }]);
+            const { error } = await supabaseClient.from('products').insert([{ name, price, img }]);
 
             if (!error) {
                 alert('تمت إضافة السلعة بنجاح!');
                 document.getElementById('p-name').value = '';
-                document.getElementById('p-desc').value = '';
                 document.getElementById('p-price').value = '';
+                document.getElementById('p-img').value = '';
                 loadAdminProducts();
             } else {
                 alert('حدث خطأ أثناء الإضافة.');
