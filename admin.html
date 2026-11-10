@@ -6,13 +6,14 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: Tahoma, sans-serif; background: #f4f4f4; padding: 20px; text-align: right; }
-        .admin-box, .panel { background: white; padding: 20px; border-radius: 8px; max-width: 600px; margin: auto; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .admin-box, .panel { background: white; padding: 20px; border-radius: 8px; max-width: 700px; margin: auto; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
         .hidden { display: none; }
         input, button { padding: 10px; margin: 5px 0; width: 100%; box-sizing: border-box; }
         button { background: #000; color: #fff; border: none; cursor: pointer; border-radius: 4px; }
         button:hover { background: #333; }
-        .product-row { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ddd; padding: 10px 0; }
-        .delete-btn { background: red; width: auto; padding: 5px 10px; }
+        .item-row, .order-row { border-bottom: 1px solid #ddd; padding: 12px 0; margin-bottom: 10px; }
+        .order-row { background: #fafafa; padding: 15px; border-radius: 6px; border: 1px solid #eee; }
+        .delete-btn { background: red; width: auto; padding: 5px 10px; margin-top: 5px; }
     </style>
 </head>
 <body>
@@ -25,26 +26,33 @@
     </div>
 
     <!-- لوحة التحكم -->
-    <div id="admin-panel" class="panel hidden">
-        <h2>إدارة المنتجات</h2>
+    <div id="admin-panel" class="hidden">
         
-        <h3>إضافة منتج جديد</h3>
-        <input type="text" id="p-name" placeholder="اسم السلعة (مثلاً: T-Shirt)">
-        <input type="text" id="p-desc" placeholder="وصف قصير">
-        <input type="number" id="p-price" placeholder="الثمن بالدرهم">
-        <button onclick="addProduct()">إضافة السلعة للموقع</button>
+        <!-- قسم الطلبيات -->
+        <div class="panel">
+            <h2>📦 الطلبيات الواردة (Orders)</h2>
+            <div id="admin-orders-list">جاري تحميل الطلبيات...</div>
+        </div>
 
-        <hr style="margin: 20px 0;">
+        <!-- قسم إدارة المنتجات -->
+        <div class="panel">
+            <h2>🛒 إدارة المنتجات</h2>
+            <h3>إضافة منتج جديد</h3>
+            <input type="text" id="p-name" placeholder="اسم السلعة (مثلاً: T-Shirt)">
+            <input type="text" id="p-desc" placeholder="وصف قصير">
+            <input type="number" id="p-price" placeholder="الثمن بالدرهم">
+            <button onclick="addProduct()">إضافة السلعة للموقع</button>
 
-        <h3>السلع الحالية</h3>
-        <div id="admin-products-list">جاري التحميل...</div>
+            <hr style="margin: 20px 0;">
+
+            <h3>السلع الحالية</h3>
+            <div id="admin-products-list">جاري التحميل...</div>
+        </div>
+
     </div>
 
     <script>
-        // الكود السري ديالك
         const MY_SECRET_CODE = "akirah2026";
-
-        // معلومات Supabase المربوطة بموقعك
         const SUPABASE_URL = 'https://mcgojcrqthtowagnffdk.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_zyq8Nm5IHnjl7u9mHReORw_0suR_B07';
         
@@ -56,11 +64,48 @@
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('admin-panel').classList.remove('hidden');
                 loadAdminProducts();
+                loadAdminOrders();
             } else {
                 alert('الكود خطأ!');
             }
         }
 
+        // جلب وعرض الطلبيات
+        async function loadAdminOrders() {
+            const { data, error } = await supabaseClient.from('orders').select('*').order('id', { ascending: false });
+            const ordersContainer = document.getElementById('admin-orders-list');
+            ordersContainer.innerHTML = '';
+            
+            if (error || !data || data.length === 0) {
+                ordersContainer.innerHTML = 'ما كاينا حتى طلبيّة حالياً.';
+                return;
+            }
+
+            data.forEach(o => {
+                ordersContainer.innerHTML += `
+                    <div class="order-row">
+                        <p><strong>👤 الاسم:</strong> ${o.customer_name || 'غير محدد'}</p>
+                        <p><strong>📞 الهاتف:</strong> ${o.customer_phone || 'غير محدد'}</p>
+                        <p><strong>📍 العنوان:</strong> ${o.customer_address || 'غير محدد'}</p>
+                        <p><strong>🛍️ السلعة:</strong> ${o.product_name || 'منتج'} (<span style="color:green;">${o.total_price || 0} درهم</span>)</p>
+                        <button class="delete-btn" onclick="deleteOrder(${o.id})">حذف الطلبية</button>
+                    </div>
+                `;
+            });
+        }
+
+        async function deleteOrder(id) {
+            if (confirm('واش متأكد بغيتي تمسح هاد الطلبية؟')) {
+                const { error } = await supabaseClient.from('orders').delete().eq('id', id);
+                if (!error) {
+                    loadAdminOrders();
+                } else {
+                    alert('خطأ في الحذف.');
+                }
+            }
+        }
+
+        // جلب وعرض المنتجات
         async function loadAdminProducts() {
             const { data } = await supabaseClient.from('products').select('*');
             const listContainer = document.getElementById('admin-products-list');
@@ -73,7 +118,7 @@
 
             data.forEach(p => {
                 listContainer.innerHTML += `
-                    <div class="product-row">
+                    <div class="item-row" style="display:flex; justify-content:space-between; align-items:center;">
                         <div>
                             <strong>${p.name}</strong> - <span style="color:green;">${p.price} درهم</span>
                         </div>
@@ -93,9 +138,7 @@
                 return;
             }
 
-            const { error } = await supabaseClient
-                .from('products')
-                .insert([{ name, description, price }]);
+            const { error } = await supabaseClient.from('products').insert([{ name, description, price }]);
 
             if (!error) {
                 alert('تمت إضافة السلعة بنجاح!');
@@ -110,11 +153,7 @@
 
         async function deleteProduct(id) {
             if (confirm('واش متأكد بغيتي تمسح هاد السلعة؟')) {
-                const { error } = await supabaseClient
-                    .from('products')
-                    .delete()
-                    .eq('id', id);
-
+                const { error } = await supabaseClient.from('products').delete().eq('id', id);
                 if (!error) {
                     loadAdminProducts();
                 } else {
@@ -126,4 +165,3 @@
 
 </body>
 </html>
-
